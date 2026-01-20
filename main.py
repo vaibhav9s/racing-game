@@ -68,6 +68,7 @@ show_checkpoints = True
 
 lap = 0
 font = pygame.font.Font(None, 40)
+countdown_font = pygame.font.Font(None, 160)
 
 button_font = pygame.font.Font(None, 50)
 start_button_rect = pygame.Rect(WIDTH//2 - 150, HEIGHT//2 + 100, 300, 60)
@@ -114,6 +115,7 @@ while True:
                     game_state = COUNTDOWN
                     countdown_start_time = pygame.time.get_ticks()
                     countdown_value = 3
+                    countdown_done = False
 
     # =============================
     # 2. CAMERA FOLLOW
@@ -160,23 +162,8 @@ while True:
     # =============================
     # 5. FINISH LINE & CHECKPOINTS
     # =============================
-    # if game_state == RACE:
-    #     car_rect = pygame.Rect(car.x - 20, car.y - 20, 40, 40)
-    #
-    #     if car_rect.colliderect(finish_rect):
-    #         if not crossed_finish and current_checkpoint == 0:
-    #             lap_count += 1
-    #             crossed_finish = True
-    #
-    #             now = pygame.time.get_ticks()
-    #             lap_time = (now - lap_start_time) / 1000.0
-    #             lap_start_time = now
-    #
-    #             if best_lap_time is None or lap_time < best_lap_time:
-    #                 best_lap_time = lap_time
-    #     else:
-    #         crossed_finish = False
 
+    if game_state == RACE:
         cp_x, cp_y = checkpoints[current_checkpoint]
         dist = ((car.x - cp_x)**2 + (car.y - cp_y)**2)**0.5
 
@@ -212,13 +199,23 @@ while True:
         window.blit(text, text.get_rect(center=start_button_rect.center))
 
     elif game_state == COUNTDOWN:
-        text = font.render(str(countdown_value), True, (255, 0, 0))
-        window.blit(text, text.get_rect(center=(WIDTH//2, HEIGHT//2)))
+        countdown_color = (255, 215, 0)
+        outline_color = (0, 0, 0)
+        text = countdown_font.render(str(countdown_value), True, countdown_color)
+        outline = countdown_font.render(str(countdown_value), True, outline_color)
+        text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        for dx, dy in [(-3, 0), (3, 0), (0, -3), (0, 3)]:
+            window.blit(outline, text_rect.move(dx, dy))
+        window.blit(text, text_rect)
 
     elif game_state == RACE:
         timer = (pygame.time.get_ticks() - lap_start_time) / 1000.0
         hud = f"Lap: {lap_count}/{total_laps}   Time: {timer:.2f}s"
         window.blit(font.render(hud, True, (255, 255, 255)), (20, 20))
+
+    elif game_state == FINISHED:
+        text = countdown_font.render("Finished!", True, (255, 215, 0))
+        window.blit(text, text.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
 
     if game_state == RACE:
         race_cars = []
